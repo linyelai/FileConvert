@@ -55,15 +55,23 @@
             <scope>compile</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.aspose.cells/aspose-cells-jdk16 -->
+
         <dependency>
             <groupId>com.aspose</groupId>
-            <artifactId>aspose-cells</artifactId>
-            <version>8.5.2</version>
+            <artifactId>aspose-words</artifactId>
+            <version>18.8</version>
         </dependency>
-
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -115,15 +123,6 @@
                 <version>2.7</version>
             </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>D:\download\svg\aspose-word-16.8.0-maven</directory>
-                <targetPath>BOOT-INF/lib/</targetPath>
-                <includes>
-                    <include>**/*.jar</include>
-                </includes>
-            </resource>
-        </resources>
         </build>
     <!-- 不同的打包环境 -->
     <profiles>
