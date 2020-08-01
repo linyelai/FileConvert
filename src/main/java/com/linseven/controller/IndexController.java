@@ -69,7 +69,7 @@ public class IndexController {
 
                 String filename = file.getOriginalFilename().substring(0,file.getOriginalFilename().lastIndexOf("."));
                 InputStream inputStream = file.getInputStream();
-                pdf2Image(inputStream,temp.getAbsolutePath(),filename,400);
+                pdf2Image(inputStream,temp.getAbsolutePath(),filename,96);
 
             }
             //package the image
@@ -155,12 +155,11 @@ public class IndexController {
             PDFRenderer renderer = new PDFRenderer(pdDocument);
             int pages = pdDocument.getNumberOfPages();// 获取PDF页数
             System.out.println("PDF page number is:" + pages);
-            StringBuffer imgFilePath = null;
             for (int i = 0; i < pages; i++) {
                 String imagepath = filepath+File.separator+filename+"_"+i+".png";
                 File dstFile = new File(imagepath);
-                BufferedImage image = renderer.renderImage(i,2.0f);
-                ImageIO.write(image, ".png", dstFile);// PNG
+                BufferedImage image = renderer.renderImageWithDPI(i, dpi);
+                ImageIO.write(image, "png", dstFile);// PNG
             }
             System.out.println("PDF文档转PNG图片成功！");
 
