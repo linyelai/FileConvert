@@ -5,10 +5,7 @@ import com.aspose.words.License;
 import com.aspose.words.SaveFormat;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+import java.io.*;
 
 @Component
 public class Doc2Pdf {
@@ -38,6 +35,20 @@ public class Doc2Pdf {
             FileOutputStream os = new FileOutputStream(file);
             Document doc = new Document(Address); //Address是将要被转化的word文档
             doc.save(os, SaveFormat.PDF);//全面支持DOC, DOCX, OOXML, RTF HTML, OpenDocument, PDF, EPUB, XPS, SWF 相互转换
+            long now = System.currentTimeMillis();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public  void doc2pdf(InputStream inputStream, OutputStream outputStream) {
+
+        if (!getLicense()) { // 验证License 若不验证则转化出的pdf文档会有水印产生
+            return;
+        }
+        try {
+
+            Document doc = new Document(inputStream); //Address是将要被转化的word文档
+            doc.save(outputStream, SaveFormat.PDF);//全面支持DOC, DOCX, OOXML, RTF HTML, OpenDocument, PDF, EPUB, XPS, SWF 相互转换
             long now = System.currentTimeMillis();
         } catch (Exception e) {
             e.printStackTrace();

@@ -5,7 +5,11 @@ import com.aspose.words.SaveFormat;
 import com.aspose.words.Section;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -156,7 +160,7 @@ public class IndexController {
                 String imagepath = filepath+File.separator+filename+"_"+i+".png";
                 File dstFile = new File(imagepath);
                 BufferedImage image = renderer.renderImage(i,2.0f);
-                ImageIO.write(image, "png", dstFile);// PNG
+                ImageIO.write(image, ".png", dstFile);// PNG
             }
             System.out.println("PDF文档转PNG图片成功！");
 
@@ -167,5 +171,239 @@ public class IndexController {
 
     }
 
+
+    @PostMapping("/word2pdf")
+    public void word2pdf(@RequestParam("file")MultipartFile [] files , HttpServletResponse response){
+
+        //
+        String tempDir = UUID.randomUUID().toString().replace("-","");
+        OutputStream out = null;
+        try {
+            File temp = new File("d:/temp/"+tempDir);
+            if(!temp.exists()){
+                temp.mkdir();
+            }
+            //get upload file
+            for(MultipartFile file :files){
+
+                String filename = file.getOriginalFilename().substring(0,file.getOriginalFilename().lastIndexOf("."));
+                InputStream inputStream = file.getInputStream();
+                OutputStream pdfOut = new FileOutputStream(temp.getAbsolutePath()+File.separator+filename+".pdf");
+                doc2Pdf.doc2pdf(inputStream,pdfOut);
+
+            }
+            //package the image
+            //generae the zip name
+            String zipname = UUID.randomUUID().toString().replace("-","")+".zip";
+            File zip = new File(temp.getAbsolutePath()+File.separator+zipname);
+            if(!zip.exists()){
+                zip.createNewFile();
+            }
+            OutputStream outputStream = new FileOutputStream(temp.getAbsolutePath()+File.separator+zipname);
+            List<File> imageFiles = Arrays.asList(temp.listFiles());
+            List<File> imagefileList = imageFiles.stream().filter(file->{
+
+                if(file.getName().contains(".pdf")){
+                    return true;
+                }else{
+                    return false;
+                }
+
+            }).collect(Collectors.toList());
+
+            toZip(imagefileList,outputStream);
+            //response the zip
+            out = response.getOutputStream();
+            InputStream inputStream = new FileInputStream(temp.getAbsolutePath()+File.separator+zipname);
+            response.setHeader("Content-Disposition", "attachment;filename=" +zipname);
+            int len =0;
+            byte[] buff = new byte[1024];
+            while((len=inputStream.read(buff))>0){
+                out.write(buff,0,len);
+            }
+            out.close();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(out!=null){
+
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+    }
+
+    @PostMapping("/pdf2text")
+    public void pdf2text(@RequestParam("file")MultipartFile [] files , HttpServletResponse response){
+
+        //new a temp dir to save the images
+        String tempDir = UUID.randomUUID().toString().replace("-","");
+        OutputStream out = null;
+        try {
+            File temp = new File("d:/temp/"+tempDir);
+            if(!temp.exists()){
+                temp.mkdir();
+            }
+            //get upload file
+            for(MultipartFile file :files){
+
+                String filename = file.getOriginalFilename().substring(0,file.getOriginalFilename().lastIndexOf("."));
+                InputStream inputStream = file.getInputStream();
+                pdf2Text(inputStream,temp.getAbsolutePath(),filename);
+
+            }
+            //package the image
+            //generae the zip name
+            String zipname = UUID.randomUUID().toString().replace("-","")+".zip";
+            File zip = new File(temp.getAbsolutePath()+File.separator+zipname);
+            if(!zip.exists()){
+                zip.createNewFile();
+            }
+            OutputStream outputStream = new FileOutputStream(temp.getAbsolutePath()+File.separator+zipname);
+            List<File> imageFiles = Arrays.asList(temp.listFiles());
+            List<File> imagefileList = imageFiles.stream().filter(file->{
+
+                if(file.getName().contains(".txt")){
+                    return true;
+                }else{
+                    return false;
+                }
+
+            }).collect(Collectors.toList());
+
+            toZip(imagefileList,outputStream);
+            //response the zip
+            out = response.getOutputStream();
+            InputStream inputStream = new FileInputStream(temp.getAbsolutePath()+File.separator+zipname);
+            response.setHeader("Content-Disposition", "attachment;filename=" +zipname);
+            int len =0;
+            byte[] buff = new byte[1024];
+            while((len=inputStream.read(buff))>0){
+                out.write(buff,0,len);
+            }
+            out.close();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            if(out!=null){
+
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+    private void pdf2Text(InputStream inputStream,String filepath,String filename){
+
+        PDDocument pdDocument;
+        try{
+            pdDocument = PDDocument.load(inputStream);
+            PDFTextStripper stripper = new PDFTextStripper();
+            String txtPath = filepath+File.separator+filename+".txt";
+            File dstFile = new File(txtPath);
+            OutputStream outputStream = new FileOutputStream(txtPath);
+            outputStream.write(stripper.getText(pdDocument).getBytes());
+            System.out.println("PDF文档转txt成功！");
+        }catch (Exception e){
+
+            e.printStackTrace();
+        }
+
+    }
+
+
+    @PostMapping("/image2pdf")
+    public void image2pdf(@RequestParam("file")MultipartFile [] files , HttpServletResponse response){
+
+        OutputStream outputStream = null;
+        int pagewidth = 595;
+        int pageHeight = 842;
+        float  times = 1f;
+        try {
+            String tempDir = UUID.randomUUID().toString().replace("-","");
+            outputStream = response.getOutputStream();
+            response.setHeader("Content-Disposition", "attachment;filename=" +tempDir+".pdf");
+            PDDocument doc = new PDDocument();
+
+            for (int i=0;i<files.length;i++) {
+                MultipartFile file = files[i];
+                //Retrieving the pa[i];
+                PDPage page = new PDPage();
+                //Creating PDImageXObject object
+                String fileType = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf(".")+1);
+                PDImageXObject pdImage = PDImageXObject.createFromByteArray(doc,file.getBytes(),fileType);
+                int width = pdImage.getWidth();
+                int height = pdImage.getHeight();
+                if(width>pagewidth){
+                    times = ((float)width)/pagewidth;
+                    width = pagewidth;
+                    height =(int) (((float)pageHeight)/times);
+                }
+                else if(height>pageHeight){
+                    times = ((float)height)/pageHeight;
+                    height = pageHeight;
+                    width =(int) (((float)pagewidth)/times);
+                }
+                else if(width<pagewidth){
+                    times = ((float)pagewidth)/width;
+                    width = pagewidth;
+                    height =(int) (((float)pageHeight)*times);
+                }
+               else if(height<pageHeight){
+                    times = ((float)pageHeight)/height;
+                    height = pageHeight;
+                    width =(int) (((float)pagewidth)*times);
+                }
+
+                //creating the PDPageContentStream object
+                int x = (pagewidth-width)/2;
+                int y = (pageHeight-height)/2;
+                PDPageContentStream contents = new PDPageContentStream(doc, page);
+                //Drawing the image in the PDF document
+                contents.drawImage(pdImage, x, y, width, height);
+                System.out.println("Image inserted");
+                //Closing the PDPageContentStream object
+                contents.close();
+                //Saving the document
+                doc.addPage(page);
+
+            }
+            doc.save("D:/temp/"+File.separator+tempDir+".pdf");
+            //Closing the document
+            doc.close();
+            InputStream inputStream  = new FileInputStream("D:/temp/"+File.separator+tempDir+".pdf");
+            int len = 0;
+            byte [] buff = new byte[1024];
+            while((len=inputStream.read(buff))>0){
+                outputStream.write(buff,0,len);
+            }
+            outputStream.flush();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+
+            if(outputStream!=null){
+                try {
+                    outputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return;
+    }
 
 }
