@@ -27,6 +27,9 @@ public class Doc2Pdf {
         return result;
     }
 
+    /**
+     *
+     */
     public  void doc2pdf(String Address) {
 
         if (!getLicense()) { // 验证License 若不验证则转化出的pdf文档会有水印产生
