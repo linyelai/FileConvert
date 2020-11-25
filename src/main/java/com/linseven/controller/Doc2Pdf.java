@@ -47,6 +47,12 @@ public class Doc2Pdf {
             e.printStackTrace();
         }
     }
+
+    /**
+     *
+     * @param inputStream
+     * @param outputStream
+     */
     public  void doc2pdf(InputStream inputStream, OutputStream outputStream) {
 
         if (!getLicense()) { // 验证License 若不验证则转化出的pdf文档会有水印产生
