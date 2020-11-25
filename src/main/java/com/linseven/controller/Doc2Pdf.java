@@ -14,7 +14,7 @@ import java.io.*;
 public class Doc2Pdf {
 
     /***
-     * 阿丽,
+     * 阿丽,ssss
      * @return
      */
     public  boolean getLicense() {
