@@ -61,6 +61,11 @@ public class Doc2Pdf {
             e.printStackTrace();
         }
     }
+
+    /**
+     * that is perfect for me
+     * @param args
+     */
     public static  void main(String [] args){
         Doc2Pdf doc2Pdf = new Doc2Pdf();
         doc2Pdf.doc2pdf("d:/images/Word.docx");
