@@ -15,7 +15,7 @@ public class Doc2Pdf {
 
     /***
      * 阿丽,s我
-     * @return sdsds
+     * @return sd
      */
     public  boolean getLicense() {
         boolean result = false;
