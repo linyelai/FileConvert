@@ -13,6 +13,10 @@ import java.io.*;
 @Component
 public class Doc2Pdf {
 
+    /***
+     *
+     * @return
+     */
     public  boolean getLicense() {
         boolean result = false;
         try {
